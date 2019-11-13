@@ -84,6 +84,7 @@ INSERT INTO thingful_reviews (
   ),
   (
     'I heard about this one time at band camp.',
+    
     3,
     4,
     4

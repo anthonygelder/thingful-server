@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 function makeUsersArray() {
   return [
@@ -237,11 +238,11 @@ function seedUsers(db, users) {
     ...user,
     password: bcrypt.hashSync(user.password, 1)
   }))
-  return db.into('blogful_users').insert(preppedUsers)
+  return db.into('thingful_users').insert(preppedUsers)
     .then(() =>
       // update the auto sequence to stay in sync
       db.raw(
-        `SELECT setval('blogful_users_id_seq', ?)`,
+        `SELECT setval('thingful_users_id_seq', ?)`,
         [users[users.length - 1].id],
       )
     )
@@ -261,7 +262,7 @@ function seedThingsTables(db, users, things, comments=[]) {
     if (reviews.length) {
       await trx.into('thingful_reviews').insert(reviews)
       await trx.raw(
-        `SELECT setval('blogful_reviews_id_seq', ?)`,
+        `SELECT setval('thingful_reviews_id_seq', ?)`,
         [reviews[reviews.length - 1].id],
       )
     }
@@ -277,6 +278,14 @@ function seedMaliciousThing(db, user, thing) {
     )
 }
 
+function makeAuthHeader(user, secret = process.env.JWT_SECRET) {
+  const token = jwt.sign({ user_id: user.id }, secret, {
+    subject: user.user_name,
+    algorithm: 'HS256',
+  })
+  return `Bearer ${token}`
+}
+
 module.exports = {
   makeUsersArray,
   makeThingsArray,
@@ -289,5 +298,6 @@ module.exports = {
   cleanTables,
   seedThingsTables,
   seedMaliciousThing,
+  makeAuthHeader,
   seedUsers
 }
